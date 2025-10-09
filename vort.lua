@@ -104,57 +104,67 @@ CompetitionTab:CreateDropdown({
 })
 
 local Event = Window:CreateTab("Event", 119054513692205)
-Event:CreateSection("Maze")
+Event:CreateSection("Event / Minigames")
 
 local rs = game:GetService("ReplicatedStorage")
-local selectedMazeDifficulty = "Insane"
+local selectedDifficulty = "Insane"
+local selectedMinigame = "Corn Maze"
 
 Event:CreateDropdown({
-    Name = "Maze Difficulty",
+    Name = "Minigame",
+    Options = {"Corn Maze", "Pet Match", "Cart Escape", "Robot Claw"},
+    CurrentOption = "Corn Maze",
+    Callback = function(Value)
+        if type(Value) == "table" then
+            selectedMinigame = Value[1]
+        else
+            selectedMinigame = Value
+        end
+    end
+})
+
+Event:CreateDropdown({
+    Name = "Difficulty",
     Options = {"Easy", "Medium", "Hard", "Insane"},
     CurrentOption = "Insane",
     Callback = function(Value)
-        selectedMazeDifficulty = Value
+        if type(Value) == "table" then
+            selectedDifficulty = Value[1]
+        else
+            selectedDifficulty = Value
+        end
     end
 })
 
 Event:CreateToggle({
-    Name = "Auto Complete Maze",
+    Name = "Auto Complete Minigame",
     CurrentValue = false,
     Callback = function(Value)
-        _G.RunningMaze = Value
+        _G.RunningMinigame = Value
         task.spawn(function()
-            while _G.RunningMaze do
-                local args = {"SkipMinigameCooldown", "Corn Maze"}
-                rs:WaitForChild("Shared", 9e9)
+            while _G.RunningMinigame do
+                local remote = rs:WaitForChild("Shared", 9e9)
                     :WaitForChild("Framework", 9e9)
                     :WaitForChild("Network", 9e9)
                     :WaitForChild("Remote", 9e9)
                     :WaitForChild("RemoteEvent", 9e9)
-                    :FireServer(unpack(args))
+
+                local args = {"SkipMinigameCooldown", selectedMinigame}
+                remote:FireServer(unpack(args))
                 task.wait(0.5)
 
-                args = {"StartMinigame", "Corn Maze", selectedMazeDifficulty}
-                rs:WaitForChild("Shared", 9e9)
-                    :WaitForChild("Framework", 9e9)
-                    :WaitForChild("Network", 9e9)
-                    :WaitForChild("Remote", 9e9)
-                    :WaitForChild("RemoteEvent", 9e9)
-                    :FireServer(unpack(args))
+                args = {"StartMinigame", selectedMinigame, selectedDifficulty}
+                remote:FireServer(unpack(args))
                 task.wait(0.5)
 
                 args = {"FinishMinigame"}
-                rs:WaitForChild("Shared", 9e9)
-                    :WaitForChild("Framework", 9e9)
-                    :WaitForChild("Network", 9e9)
-                    :WaitForChild("Remote", 9e9)
-                    :WaitForChild("RemoteEvent", 9e9)
-                    :FireServer(unpack(args))
+                remote:FireServer(unpack(args))
                 task.wait(0.5)
             end
         end)
     end
 })
+
 
 Event:CreateSection("Pickup")
 
